@@ -1,0 +1,75 @@
+# Fork-only fast verification of the FileLock XTC/TRR test fix
+# (port of MDAnalysis/mdanalysis#5423). Upstream workflows gate on
+# github.repository == MDAnalysis/mdanalysis, so this workflow exists
+# to exercise the lock-file tests on bitflicker64/mdanalysis.
+name: "fork-verify-filelock"
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - verify/filelock-5423
+  workflow_dispatch:
+
+concurrency:
+  group: "fork-verify-filelock-${{ github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  lock_offset_tests:
+    if: github.repository == 'bitflicker64/mdanalysis'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: setup_os
+      uses: ./.github/actions/setup-os
+      with:
+        os-type: ubuntu-latest
+
+    - name: setup_micromamba
+      uses: mamba-org/setup-micromamba@v2
+      with:
+        environment-name: mda
+        create-args: >-
+          python=3.12
+          pip
+        condarc: |
+          channels:
+            - conda-forge
+            - bioconda
+
+    - name: install_deps
+      uses: ./.github/actions/setup-deps
+      with:
+        micromamba: true
+        full-deps: false
+        gsd: ''
+        cython: "cython<3.1"
+
+    - name: build_srcs
+      uses: ./.github/actions/build-src
+      with:
+        build-tests: true
+        build-docs: false
+        isolation: true
+
+    - name: show_filelock
+      run: |
+        python -c "import filelock; print('filelock', filelock.__version__)"
+
+    - name: run_lock_tests
+      run: |
+        # Direct coverage of the tests fixed by MDAnalysis#5423 / issue #5382
+        pytest -v --timeout=120 \
+          testsuite/MDAnalysisTests/coordinates/test_xdr.py \
+          -k "test_offset_lock_created or offsets or FileLock or lock" \
+          --disable-pytest-warnings
