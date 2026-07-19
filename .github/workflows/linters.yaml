@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   black:
-    if: "github.repository == 'MDAnalysis/mdanalysis'"
+    if: "(github.repository == 'MDAnalysis/mdanalysis' || github.repository == 'bitflicker64/mdanalysis')"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -48,7 +48,7 @@ jobs:
 
 
   pylint_check:
-    if: "github.repository == 'MDAnalysis/mdanalysis'"
+    if: "(github.repository == 'MDAnalysis/mdanalysis' || github.repository == 'bitflicker64/mdanalysis')"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -70,7 +70,7 @@ jobs:
 
 
   mypy :
-    if: "github.repository == 'MDAnalysis/mdanalysis'"
+    if: "(github.repository == 'MDAnalysis/mdanalysis' || github.repository == 'bitflicker64/mdanalysis')"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

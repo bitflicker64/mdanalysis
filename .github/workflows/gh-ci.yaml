@@ -21,7 +21,7 @@ defaults:
 
 jobs:
   main_tests:
-    if: "github.repository == 'MDAnalysis/mdanalysis'"
+    if: "(github.repository == 'MDAnalysis/mdanalysis' || github.repository == 'bitflicker64/mdanalysis')"
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
@@ -134,6 +134,12 @@ jobs:
         if [ ${{ matrix.codecov }} = "true" ]; then
           PYTEST_FLAGS="${PYTEST_FLAGS} --cov-config=.coveragerc --cov=MDAnalysis --cov-report=xml"
         fi
+        # Fork verification: skip IMD stream tests. Upstream CI is currently red
+        # on imdclient>=0.2.4 default timeout=600 (Condition.wait hangs until
+        # pytest --timeout=200). Unrelated to the FileLock offset-test fix.
+        if [ "${{ github.repository }}" = "bitflicker64/mdanalysis" ]; then
+          PYTEST_FLAGS="${PYTEST_FLAGS} --ignore=testsuite/MDAnalysisTests/coordinates/test_imd.py"
+        fi
         echo $PYTEST_FLAGS
         pytest -n logical --timeout=200 testsuite/MDAnalysisTests $PYTEST_FLAGS
 
@@ -154,7 +160,7 @@ jobs:
 
 
   build_docs:
-    if: "github.repository == 'MDAnalysis/mdanalysis'"
+    if: "(github.repository == 'MDAnalysis/mdanalysis' || github.repository == 'bitflicker64/mdanalysis')"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -254,7 +260,7 @@ jobs:
 
 
   sdist_check_and_build:
-    if: "github.repository == 'MDAnalysis/mdanalysis'"
+    if: "(github.repository == 'MDAnalysis/mdanalysis' || github.repository == 'bitflicker64/mdanalysis')"
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
